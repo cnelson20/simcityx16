@@ -48,7 +48,6 @@ main:
 
 setup_game:
   ;create world;
-
   rts
 
 loop1:
@@ -91,16 +90,6 @@ handleKeyboard:
 
   jmp @movementPart2
 
-@numberPressed:
-  cmp #$3A
-  bcs @falseFlag
-  sbc #$2F
-
-  ldx cursor_x
-  ldy cursor_y
-  iny
-  jsr createBuilding
-  rts
 @qPressed:
   lda #$00
   sta exitToMenu
@@ -121,7 +110,7 @@ handleKeyboard:
 @leftPressed:
   ldx cursor_x
   cpx #$00
-  beq @return
+  beq @return2
   dex
   stx cursor_x
   inc cursor_moved
@@ -136,11 +125,20 @@ handleKeyboard:
   rts
 @rightPressed:
   ldx cursor_x
-  inx
   cpx #VIEWSIZE
+  inx
   bcs @return
   stx cursor_x
   inc cursor_moved
+  rts
+@numberPressed:
+  cmp #$3A
+  bcs @falseFlag
+  sbc #$2F
+
+  ldx cursor_x
+  ldy cursor_y
+  jsr createBuilding
   rts
 
 @return2:
@@ -148,17 +146,19 @@ handleKeyboard:
 @movementPart2:
   ;view movment;
   cmp #$57
-  beq @wPressed
+  ;beq @wPressed
   cmp #$41
-  beq @aPressed
+  ;beq @aPressed
   cmp #$53
-  beq @sPressed
+  ;beq @sPressed
   cmp #$44
-  beq @dPressed
+  ;beq @dPressed
   ; building ;
   cmp #$30
-  bcs @numberPressed
-  @falseFlag:
+  bcc @no
+  cmp #$40
+  bcc @numberPressed
+  @no:
 
   rts
 

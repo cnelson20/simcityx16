@@ -73,12 +73,9 @@ custom_irq_handler:
   ; get keyboard input ;
   jsr handleKeyboard
   ; go to game code or something ;
-  jsr clearPlayField
   jsr drawRoutine
   ; done ;
 
-  ;lda #$01
-  ;sta $9F27
   ; Return to whatever had been interrupted:
   irq_done:
   jmp (Default_irq_handler)
@@ -231,44 +228,71 @@ clearPlayField:
 ; draw routine for main game ;
 drawRoutine:
   ;do cursor ;
+  jsr clearPlayField
   jsr drawCursor
   ;draw rest of screen ;
   lda #$20
   sta VERA_autoInc
 
+  ; for testing ;
+  lda #test_lobyte
+  sta $32
+  lda #test_hibyte
+  sta $33
+  jsr drawObjectToScreen
+  rts
+  ; end testing ;
+
   lda #$00
-  sta $80
-
-  ; set X and Y to 0, store to memory ;
-  ldx #$00
-  stx temp
-
-  ; draw screen ;
-  @drawLoop:
+  sta temp
   ldy #$00
-  sty temp
-  @loopHere:
+
+  @loop:
   lda temp
+  ; load address of building into 32 & 33
   jsr setAddr32WithBuildingList
 
-  ldy #$00
   lda ($32),Y
   cmp #$FF
-  bne @buildingLoop
-  rts
+  beq @rt
+  cmp #$00
+  bne @b
 
-  @buildingLoop:
-  cmp #$FE
-  beq @incHere
-
+  ; 32 must direct to a location of a valid building ;
+  ; now jump to draw building routine ;
   jsr drawObjectToScreen
 
-  @incHere:
-  inc temp
-  jmp @loopHere
+  @b:
+  ldx temp
+  inx
+  stx temp
+  cpx $80
+  bcc @loop
+  @rt:
+  rts
 
-; .X & .Y are positions, .A building ID;
 drawObjectToScreen:
+  ldy #$00
+  lda ($32),Y
+  cmp $00
+  beq @a
+  rts
+
+  @a:
+  ldy #$01
+  lda ($32),Y
+  tax
+
+  ldy #$02
+  lda ($32),Y
+  tay
+
+  cpx view_x
+  bcc @return
+
+  cpy view_y
+  bcc @return
+
   inx
   inx
   iny
@@ -278,20 +302,15 @@ drawObjectToScreen:
   sty yDraw
   sty yOffset ; max position for x
 
-  jsr setAddr30WithBuilding
-
   ldx xDraw
   ldy yDraw
   jsr setXYaddr
 
   clc
-  ldy #$0A
+  ldy #$0D
   lda ($30),Y
   sta $3A
-  cmp #$03
-  bcc @a
-  lda #$03
-  @a:
+
   ; set max value for x ;
 
   lda #$20
@@ -299,9 +318,9 @@ drawObjectToScreen:
   lda #$00
   sta $3B ; i
   sta $3C ; j
+  lda #$03
   sta $3D ; just a loop counter
-  jsr @loop
-  rts
+  jmp @loop
 
   @incY:
   ldx #$00
@@ -320,11 +339,15 @@ drawObjectToScreen:
   @loop:
 
   ldy $3D
-  lda ($30),Y
+  lda ($32),Y
   sta VERA_dataAddr
 
   @incX:
   inc $3D
+  ldx #$0F
+  cpx $3D
+  bcc @return
+
   inc xDraw
   ldx $3B
   inx
@@ -332,6 +355,7 @@ drawObjectToScreen:
   cpx $3A ; check if i >= size
   bcs @incY
   jmp @loop
+
   @return:
   rts
 
@@ -342,24 +366,34 @@ createBuilding: ; draws buidling with id in the accumulator
   clc
   txa
   adc view_x
-  stx xDraw
+  sta xDraw
   clc
   tya
   adc view_x
-  sty yDraw
+  sta yDraw
 
   jsr setAddr30WithBuilding
   jsr findSpaceInList
 
-  ; function call ;
-  jsr memory_copy
+  ldy #$00
+  lda $34
+  sta ($32),Y
+
   ldy #$01
   lda xDraw
   sta ($32),Y
-  iny
+
+  ldy #$02
   lda yDraw
   sta ($32),Y
 
+  ldy #$03
+  @loop:
+  lda ($30),Y
+  sta ($32),Y
+  iny
+  cpy #$10
+  bcc @loop
   rts
 
 ; set X to 0 before ;

@@ -10,11 +10,16 @@ text_title:
 switchHexTable:
   .incbin "table.bin"
 buildingsList:
-  .byte $00, $02, $02, $66, $66, $66, $66, $08, $66, $66, $66, $66, $00, $03, $00, $00
   .res $800,$FF
 
 .DEFINE list_lobyte .LOBYTE (buildingsList)
 .DEFINE list_hibyte .HIBYTE (buildingsList)
+
+test:
+  .byte $00, $01, $01, $66, $66, $66, $66, $08, $66, $66, $66, $66, $00, $03, $00, $00 ; hospital
+.DEFINE test_lobyte .LOBYTE (test)
+.DEFINE test_hibyte .HIBYTE (test)
+
 
 buildings:
   ;     fill x    y    character data                                    size          ;
