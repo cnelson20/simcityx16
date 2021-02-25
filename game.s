@@ -18,6 +18,7 @@ setup:
   jsr preserve_default_irq
   clc
   lda #$00
+  sta list
   sta VERA_vramAddr0 ; clear vram addr
   sta VERA_vramAddr1 ; clear vram addr
   sta VERA_autoInc ; set auto-increment byte to 0

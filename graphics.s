@@ -329,7 +329,10 @@ drawObjectToScreen:
   ldy yDraw
   jsr setXYaddr
 
-  ; set max value for x ;
+
+  ldy #$0D
+  lda ($32),Y
+  sta $3A
 
   lda #$20
   sta VERA_autoInc ; 2 bytes
@@ -374,6 +377,7 @@ drawObjectToScreen:
   stx $3B ; increment i
   cpx $3A ; check if i >= size
   bcs @incY
+
   jmp @loop
 
   @return:
@@ -478,9 +482,9 @@ setAddr32WithBuildingList:
   clc
 
   lda $32
-  adc #test_lobyte
+  adc #list_lobyte
   sta $32
   lda $33
-  adc #test_hibyte
+  adc #list_hibyte
   sta $33
   rts

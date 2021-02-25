@@ -9,15 +9,19 @@ text_title:
   ; length = 12
 switchHexTable:
   .incbin "table.bin"
-buildingsList:
-  .res $800,$FF
 
-.DEFINE list_lobyte .LOBYTE (buildingsList)
-.DEFINE list_hibyte .HIBYTE (buildingsList)
+list:
+  .res $800,$FF
+.DEFINE list_lobyte .LOBYTE (list)
+.DEFINE list_hibyte .HIBYTE (list)
 
 test:
-  .byte $00, $02, $02, $66, $66, $66, $66, $08, $66, $66, $66, $66, $00, $03, $00, $00 ; hospital
-  .byte $00, $02, $02, $24, $40, $24, $42, $02, $42, $24, $40, $24, $00, $03, $00, $00 ; bank
+  .byte $00, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+  .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ;  End Of List
+  .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ;  End Of List
+  .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ;  End Of List
+  .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ;  End Of List
+  .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ;  End Of List
   .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ;  End Of List
 .DEFINE test_lobyte .LOBYTE (test)
 .DEFINE test_hibyte .HIBYTE (test)
