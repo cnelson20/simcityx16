@@ -294,12 +294,15 @@ drawObjectToScreen:
   lda #$00
   sta VERA_vramAddr0
   sta VERA_vramAddr1
-  sta VERA_dataAddr
   lda view_x
+  sta VERA_dataAddr
+  lda view_x+1
   sta VERA_dataAddr
   lda #$20
   sta VERA_dataAddr
   lda view_y
+  sta VERA_dataAddr
+  lda view_y+1
   sta VERA_dataAddr
   ; end that section ;
 
