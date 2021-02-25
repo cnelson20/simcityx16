@@ -48,6 +48,11 @@ main:
 
 setup_game:
   ;create world;
+  ldx #$02
+  ldy #$02
+  lda #$00
+  jsr createBuilding
+
   rts
 
 loop1:
@@ -132,9 +137,12 @@ handleKeyboard:
   inc cursor_moved
   rts
 @numberPressed:
-  cmp #$3A
-  bcs @falseFlag
-  sbc #$2F
+  cmp #$30
+  bne @not_zero
+  clc
+  adc #$10
+  @not_zero:
+  sbc #$30
 
   ldx cursor_x
   ldy cursor_y
@@ -144,16 +152,16 @@ handleKeyboard:
 @return2:
   rts
 @movementPart2:
-  ;view movment;
+  ;view movement;
   cmp #$57
-  ;beq @wPressed
+  beq @wPressed
   cmp #$41
-  ;beq @aPressed
+  beq @aPressed
   cmp #$53
-  ;beq @sPressed
+  beq @sPressed
   cmp #$44
-  ;beq @dPressed
-  ; building ;
+  beq @dPressed
+  ; building structures ;
   cmp #$30
   bcc @no
   cmp #$40

@@ -234,31 +234,25 @@ drawRoutine:
   lda #$20
   sta VERA_autoInc
 
-  ; for testing ;
-  lda #test_lobyte
-  sta $32
-  lda #test_hibyte
-  sta $33
-  jsr drawObjectToScreen
-  rts
-  ; end testing ;
-
   lda #$00
   sta temp
   ldy #$00
+
 
   @loop:
   lda temp
   ; load address of building into 32 & 33
   jsr setAddr32WithBuildingList
 
+  ldy #$00
   lda ($32),Y
   cmp #$FF
   beq @rt
+
   cmp #$00
   bne @b
 
-  ; 32 must direct to a location of a valid building ;
+    ; $32 (& $33) must direct to a location of a valid building ;
   ; now jump to draw building routine ;
   jsr drawObjectToScreen
 
@@ -271,11 +265,20 @@ drawRoutine:
   @rt:
   rts
 
+
 drawObjectToScreen:
+  jmp @main
+
+  @rt:
+  rts
+
+  @main:
   ldy #$00
   lda ($32),Y
   cmp $00
   beq @a
+
+  brk ; this shouldnt happen, so break! ;
   rts
 
   @a:
@@ -287,18 +290,44 @@ drawObjectToScreen:
   lda ($32),Y
   tay
 
+  ; for debug
+  lda #$00
+  sta VERA_vramAddr0
+  sta VERA_vramAddr1
+  stx VERA_dataAddr
+  sty VERA_dataAddr
+  lda #$20
+  sta VERA_dataAddr
+  lda view_x
+  sta VERA_dataAddr
+  lda #$20
+  sta VERA_dataAddr
+  lda view_y
+  sta VERA_dataAddr
+  lda #$20
+  sta VERA_dataAddr
+  ; end that section ;
+
   cpx view_x
-  bcc @return
-
+  bcc @rt
+  cpx view_x+1
+  bcs @rt
   cpy view_y
-  bcc @return
+  bcc @rt
+  cpy view_y+1
+  bcs @rt
 
-  inx
-  inx
-  iny
-  iny
-  stx xDraw
-  stx xOffset
+  clc
+  txa
+  adc #$02
+  sbc view_x
+  sta xDraw
+  sta xOffset
+
+  clc
+  tya
+  adc #$02
+  sbc view_y
   sty yDraw
   sty yOffset ; max position for x
 
@@ -306,10 +335,12 @@ drawObjectToScreen:
   ldy yDraw
   jsr setXYaddr
 
-  clc
+  lda #$A0
+  sta VERA_dataAddr
   ldy #$0D
-  lda ($30),Y
+  lda ($32),Y
   sta $3A
+  sta VERA_dataAddr
 
   ; set max value for x ;
 
@@ -320,6 +351,7 @@ drawObjectToScreen:
   sta $3C ; j
   lda #$03
   sta $3D ; just a loop counter
+
   jmp @loop
 
   @incY:
@@ -327,8 +359,9 @@ drawObjectToScreen:
   stx $3B ; set i to 0
   ldx xOffset
   stx xDraw
-  inc yDraw
   ldy yDraw
+  iny
+  sty yDraw
   jsr setXYaddr
   clc
   ldy $3C
@@ -361,22 +394,25 @@ drawObjectToScreen:
 
 ; x and y are the coordinates of what's to be drawn ;
 ; a is the building ID ;
+
+; not working ;
 createBuilding: ; draws buidling with id in the accumulator
-  sta $34; building ID
+  sta $34 ; building ID
   clc
   txa
   adc view_x
   sta xDraw
   clc
   tya
-  adc view_x
+  adc view_y
   sta yDraw
 
+  lda $34
   jsr setAddr30WithBuilding
   jsr findSpaceInList
 
   ldy #$00
-  lda $34
+  lda #$00
   sta ($32),Y
 
   ldy #$01
@@ -394,6 +430,7 @@ createBuilding: ; draws buidling with id in the accumulator
   iny
   cpy #$10
   bcc @loop
+
   rts
 
 ; set X to 0 before ;
@@ -401,8 +438,8 @@ findSpaceInList:
   ldy #$00
   sty temp
   @loopHere:
-  ldx temp
-  cpx #$80
+  lda temp
+  cmp #$80
   bcc @checkLoop
   rts
 
@@ -415,7 +452,6 @@ findSpaceInList:
   inc temp
   cmp #$FF
   beq @loopHere
-  @return:
   rts
 
 setAddr30WithBuilding:
@@ -455,9 +491,9 @@ setAddr32WithBuildingList:
   clc
 
   lda $32
-  adc #list_lobyte
+  adc #test_lobyte
   sta $32
   lda $33
-  adc #list_hibyte
+  adc #test_hibyte
   sta $33
   rts
