@@ -290,21 +290,16 @@ drawObjectToScreen:
   lda ($32),Y
   tay
 
-  ; for debug
+  ; for debug ;
   lda #$00
   sta VERA_vramAddr0
   sta VERA_vramAddr1
-  stx VERA_dataAddr
-  sty VERA_dataAddr
-  lda #$20
   sta VERA_dataAddr
   lda view_x
   sta VERA_dataAddr
   lda #$20
   sta VERA_dataAddr
   lda view_y
-  sta VERA_dataAddr
-  lda #$20
   sta VERA_dataAddr
   ; end that section ;
 
@@ -319,12 +314,11 @@ drawObjectToScreen:
 
   clc
   txa
-  adc #$02
+  adc #$03
   sbc view_x
   sta xDraw
   sta xOffset
 
-  clc
   tya
   adc #$02
   sbc view_y
@@ -334,13 +328,6 @@ drawObjectToScreen:
   ldx xDraw
   ldy yDraw
   jsr setXYaddr
-
-  lda #$A0
-  sta VERA_dataAddr
-  ldy #$0D
-  lda ($32),Y
-  sta $3A
-  sta VERA_dataAddr
 
   ; set max value for x ;
 
