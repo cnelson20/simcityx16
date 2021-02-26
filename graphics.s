@@ -158,41 +158,6 @@ setXYaddr:
   sty VERA_vramAddr1
   rts
 
-drawCursor:
-  ; fix color of last cursor
-  lda cursor_moved
-  cmp #$00
-  beq @newCursor
-
-  clc
-  lda old_cursor_x
-  adc #$02
-  tax
-  lda old_cursor_y
-  adc #$02
-  tay
-  jsr setXYaddr
-  inc VERA_vramAddr0
-  lda # COLOR_WHITE
-  sta VERA_dataAddr
-
-  @newCursor:
-  ; switch colors of current cursor ;
-  clc
-  lda cursor_x
-  adc #$02
-  tax
-  lda cursor_y
-  adc #$02
-  tay
-  jsr setXYaddr
-  inc VERA_vramAddr0
-  lda cursor_color
-  sta VERA_dataAddr
-
-  @return:
-  rts
-
 clearPlayField:
   lda #$20
   sta VERA_autoInc
@@ -227,162 +192,65 @@ clearPlayField:
 ; draw routine for main game ;
 drawRoutine:
   ;do cursor ;
-  jsr clearPlayField
-  jsr drawCursor
   ;draw rest of screen ;
   lda #$20
   sta VERA_autoInc
 
   lda #$00
-  sta temp
-  ldy #$00
-
-  @loop:
-  lda temp
-  ; load address of building into 32 & 33
-  jsr setAddr32WithBuildingList
-
-  ldy #$00
-  lda ($32),Y
-  cmp #$FF
-  beq @rt
-
-  cmp #$00
-  bne @b
-
-    ; $32 (& $33) must direct to a location of a valid building ;
-  ; now jump to draw building routine ;
-  jsr drawObjectToScreen
-
-  @b:
-  ldx temp
-  inx
-  stx temp
-  cpx $80
-  bcc @loop
-  @rt:
-  rts
-
-
-drawObjectToScreen:
-  jmp @main
-
-  @rt:
-  rts
-
-  @main:
-  ldy #$00
-  lda ($32),Y
-  cmp $00
-  beq @a
-
-  brk ; this shouldnt happen, so break! ;
-  rts
-
-  @a:
-  ldy #$01
-  lda ($32),Y
-  tax
-
-  ldy #$02
-  lda ($32),Y
-  tay
-
-  ; for debug ;
-  lda #$00
-  sta VERA_vramAddr0
-  sta VERA_vramAddr1
-  lda view_x
-  sta VERA_dataAddr
-  lda view_x+1
-  sta VERA_dataAddr
-  lda #$20
-  sta VERA_dataAddr
-  lda view_y
-  sta VERA_dataAddr
-  lda view_y+1
-  sta VERA_dataAddr
-  ; end that section ;
-
-  cpx view_x
-  bcc @rt
-  cpx view_x+1
-  bcs @rt
-  cpy view_y
-  bcc @rt
-  cpy view_y+1
-  bcs @rt
-
-  clc
-  txa
-  adc #$03
-  sbc view_x
   sta xDraw
-  sta xOffset
+  sta yDraw
 
-  tya
-  adc #$02
-  sbc view_y
-  sty yDraw
-  sty yOffset ; max position for x
-
-  ldx xDraw
-  ldy yDraw
-  jsr setXYaddr
-
-
-  ldy #$0D
-  lda ($32),Y
-  sta $3A
-
-  lda #$20
-  sta VERA_autoInc ; 2 bytes
-  lda #$00
-  sta $3B ; i
-  sta $3C ; j
-  lda #$03
-  sta $3D ; just a loop counter
-
-  jmp @loop
+  jmp @continue
 
   @incY:
   ldx #$00
-  stx $3B ; set i to 0
-  ldx xOffset
   stx xDraw
   ldy yDraw
-  iny
+  iny ; increment
   sty yDraw
-  jsr setXYaddr
-  clc
-  ldy $3C
-  iny
-  sty $3C ; increment j
-  cpy $3A ; check if j >= size
-  bcs @return
-  @loop:
 
-  ldy $3D
-  lda ($32),Y
+  cpy #VIEWSIZE_draw
+  bcc @continue
+  rts
+
+  @continue:
+  iny ; offset of two
+  ldx #$02
+  jsr setXYaddr
+  @loop:
+  jsr loadOffsetXY
+  sta $20
+
+  lda xDraw
+  lsr
+  tax
+  lda yDraw
+  lsr
+  tay
+
+  jsr loadAFromMap ; get character from map
+  jsr setAddr30Tile ; set jmp address to that of tile
+
+  clc
+  lda #$02 ; characters of the tile start at offset $02
+  adc $20 ; add what tile # we what
+  tay
+  lda ($30),Y
+  cmp #$00
+  beq @rt
+
   sta VERA_dataAddr
 
-  @incX:
-  inc $3D
-  ldx #$0F
-  cpx $3D
-  bcc @return
-
-  inc xDraw
-  ldx $3B
+  ldx xDraw
   inx
-  stx $3B ; increment i
-  cpx $3A ; check if i >= size
+  stx xDraw
+  cpx #VIEWSIZE_draw
   bcs @incY
-
   jmp @loop
 
-  @return:
+  @rt:
   rts
+
 
 setAddr30Tile:
   ; this seems to work ;
@@ -433,6 +301,7 @@ loadAFromMap:
   sta $41
   ldy #$00
   lda ($40),Y
+  rts
 
 storeAToMap:
   sta $42
@@ -463,3 +332,26 @@ storeAToMap:
   ldy #$00
   lda $42
   sta ($40),Y
+  rts
+
+loadOffsetXY:
+  txa
+  lsr
+  bcs @Xmod1equals1
+  tya
+  lsr
+  bcs @One
+  lda #$00
+  rts
+@One:
+  lda #$01
+  rts
+@Xmod1equals1:
+  tya
+  lsr
+  bcs @Three
+  ldx #$02
+  rts
+@Three:
+  lda #$03
+  rts

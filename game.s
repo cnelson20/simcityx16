@@ -8,17 +8,13 @@
 
 goBasic:        .byte $00
 exitToMenu:     .byte $00
-old_cursor_x:   .byte $00
-old_cursor_y:   .byte $00
-cursor_x:       .byte $00
-cursor_y:       .byte $00
-cursor_moved:   .byte $00
+player_x:       .byte $00
+player_y:       .byte $00
 
 setup:
   jsr preserve_default_irq
   clc
-  lda #$00
-  sta list
+  cld
   sta VERA_vramAddr0 ; clear vram addr
   sta VERA_vramAddr1 ; clear vram addr
   sta VERA_autoInc ; set auto-increment byte to 0
@@ -49,11 +45,6 @@ main:
 
 setup_game:
   ;create world;
-  ldx #$02
-  ldy #$02
-  lda #$00
-  jsr createBuilding
-
   rts
 
 loop1:
@@ -70,13 +61,6 @@ loop1:
 
 
 handleKeyboard:
-  lda #$00
-  sta cursor_moved
-  lda cursor_x
-  sta old_cursor_x
-  lda cursor_y
-  sta old_cursor_y
-
   jsr keyboard_get
   ; check if you want to exit ;
   cmp #$51
@@ -102,48 +86,44 @@ handleKeyboard:
   cmp #$1D ; right
   beq @rightPressed
 
-  jmp @movementPart2
+  rts
 
 @qPressed:
   lda #$00
   sta exitToMenu
   rts
 @hPressed:
-  ldx cursor_x
-  ldy cursor_y
+  ldx player_x
+  ldy player_y
   ;jsr destroyBuilding;
   rts
 @upPressed:
-  ldx cursor_y
+  ldx player_y
   cpx #$00
-  beq @return2
+  beq @return
   dex
-  stx cursor_y
-  inc cursor_moved
+  stx player_y
   rts
 @leftPressed:
-  ldx cursor_x
+  ldx player_x
   cpx #$00
-  beq @return2
+  beq @return
   dex
-  stx cursor_x
-  inc cursor_moved
+  stx player_x
   rts
 @downPressed:
-  ldx cursor_y
+  ldx player_y
   inx
   cpx #VIEWSIZE
   bcs @return
-  stx cursor_y
-  inc cursor_moved
+  stx player_y
   rts
 @rightPressed:
-  ldx cursor_x
+  ldx player_x
   cpx #VIEWSIZE
   inx
   bcs @return
-  stx cursor_x
-  inc cursor_moved
+  stx player_x
   rts
 @return:
   rts
