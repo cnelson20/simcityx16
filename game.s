@@ -85,13 +85,21 @@ handleKeyboard:
   cmp #$48
   beq @hPressed
   ; cursor movement ;
-  cmp #$91
+  cmp #$57 ; w
   beq @upPressed
-  cmp #$9D
+  cmp #$91 ; up
+  beq @upPressed
+  cmp #$41 ; s
   beq @leftPressed
-  cmp #$11
+  cmp #$9D ; left
+  beq @leftPressed
+  cmp #$53 ; a
   beq @downPressed
-  cmp #$1D
+  cmp #$11 ; down
+  beq @downPressed
+  cmp #$44 ; d
+  beq @rightPressed
+  cmp #$1D ; right
   beq @rightPressed
 
   jmp @movementPart2
@@ -136,72 +144,6 @@ handleKeyboard:
   bcs @return
   stx cursor_x
   inc cursor_moved
-  rts
-@numberPressed:
-  cmp #$30
-  bne @not_zero
-  clc
-  adc #$10
-  @not_zero:
-  sbc #$30
-
-  ldx cursor_x
-  ldy cursor_y
-  jsr createBuilding
-  rts
-
-@return2:
-  rts
-@movementPart2:
-  ;view movement;
-  cmp #$57
-  beq @wPressed
-  cmp #$41
-  beq @aPressed
-  cmp #$53
-  beq @sPressed
-  cmp #$44
-  beq @dPressed
-  ; building structures ;
-  cmp #$30
-  bcc @no
-  cmp #$40
-  bcc @numberPressed
-  @no:
-
-  rts
-
-@wPressed:
-  ldx view_y
-  cpx #$00
-  beq @return
-  dex
-  stx view_y
-  dec view_y+1
-  rts
-@aPressed:
-  ldx view_x
-  cpx #$00
-  beq @return
-  dex
-  stx view_x
-  dec view_x+1
-  rts
-@sPressed:
-  ldx view_y+1
-  cpx #$FD
-  beq @return
-  inx
-  stx view_y+1
-  inc view_y
-  rts
-@dPressed:
-  ldx view_x+1
-  cpx #$FD
-  beq @return
-  inx
-  stx view_x+1
-  inc view_x
   rts
 @return:
   rts

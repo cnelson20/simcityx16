@@ -113,7 +113,6 @@ screenSetup:
   rts
 
 loadXColor:
-  clv ; clear overflow flag
   ldx #COLOR_WHITE
   lda xDraw ; load x (location) to accumulator
   clc
@@ -237,7 +236,6 @@ drawRoutine:
   lda #$00
   sta temp
   ldy #$00
-
 
   @loop:
   lda temp
@@ -386,69 +384,7 @@ drawObjectToScreen:
   @return:
   rts
 
-; x and y are the coordinates of what's to be drawn ;
-; a is the building ID ;
-
-; not working ;
-createBuilding: ; draws buidling with id in the accumulator
-  sta $34 ; building ID
-  clc
-  txa
-  adc view_x
-  sta xDraw
-  clc
-  tya
-  adc view_y
-  sta yDraw
-
-  lda $34
-  jsr setAddr30WithBuilding
-  jsr findSpaceInList
-
-  ldy #$00
-  lda #$00
-  sta ($32),Y
-
-  ldy #$01
-  lda xDraw
-  sta ($32),Y
-
-  ldy #$02
-  lda yDraw
-  sta ($32),Y
-
-  ldy #$03
-  @loop:
-  lda ($30),Y
-  sta ($32),Y
-  iny
-  cpy #$10
-  bcc @loop
-
-  rts
-
-; set X to 0 before ;
-findSpaceInList:
-  ldy #$00
-  sty temp
-  @loopHere:
-  lda temp
-  cmp #$80
-  bcc @checkLoop
-  rts
-
-  @checkLoop:
-  lda temp
-  jsr setAddr32WithBuildingList
-  ldy #$00
-  lda ($32),Y
-
-  inc temp
-  cmp #$FF
-  beq @loopHere
-  rts
-
-setAddr30WithBuilding:
+setAddr30Tile:
   ; this seems to work ;
   tax
   lda switchHexTable,X ; get A shifted four bytes from the table
@@ -463,31 +399,34 @@ setAddr30WithBuilding:
   clc ; clear carry cause fml ;
 
   lda $30
-  adc #building_lobyte
+  adc #tiles_lobyte
   sta $30
   lda $31
-  adc #building_hibyte
+  adc #tiles_hibyte
   sta $31
   rts
 
-setAddr32WithBuildingList:
-  ; this seems to work ;
+loadAFromMap:
+  txa
+  asl
+  asl
   tax
-  lda switchHexTable,X ; get A shifted four bytes from the table
-  ; eg $2A -> $A2 ;
-  sta $33
-  and #$F0
-  sta $32
-  lda $33
-  and #$0F
-  sta $33
+
+  tya
+  asl
+  tay
+  txa
+  ror A
+  tax
+
+  tya
+  asl
+  tay
+  txa
+  ror A
 
   clc
-
-  lda $32
-  adc #list_lobyte
-  sta $32
-  lda $33
-  adc #list_hibyte
-  sta $33
-  rts
+  adc #map_lobyte
+  tax
+  tya
+  adc #map_hibyte
