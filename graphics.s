@@ -427,6 +427,39 @@ loadAFromMap:
 
   clc
   adc #map_lobyte
-  tax
+  sta $40
   tya
   adc #map_hibyte
+  sta $41
+  ldy #$00
+  lda ($40),Y
+
+storeAToMap:
+  sta $42
+  txa
+  asl
+  asl
+  tax
+
+  tya
+  asl
+  tay
+  txa
+  ror A
+  tax
+
+  tya
+  asl
+  tay
+  txa
+  ror A
+
+  clc
+  adc #map_lobyte
+  sta $40
+  tya
+  adc #map_hibyte
+  sta $41
+  ldy #$00
+  lda $42
+  sta ($40),Y
